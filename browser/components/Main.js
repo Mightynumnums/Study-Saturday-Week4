@@ -1,38 +1,60 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import axios from 'axios';
 
-import StudentList from './StudentList.js' 
-import SingleStudent from './SingleStudent.js' 
+import StudentList from './StudentList.js'
+import SingleStudent from './SingleStudent.js'
+import NewStudentForm from './NewStudentForm'
 
 export default class Main extends Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.state = {
             students: [],
-            selectedStudent : {}
+            selectedStudent: {},
+            showForm: false
         }
-
         this.selectStudent = this.selectStudent.bind(this)
+        this.handleClick = this.handleClick.bind(this)
+        this.addStudent = this.addStudent.bind(this)
     }
 
-    componentDidMount(){
+    componentDidMount() {
         this.getStudents()
     }
 
-    getStudents(){
+    async getStudents() {
         console.log("fetching")
-        axios.get('/student')
-        .then(res => this.setState({students: res.data}))
-        .catch(console.error)
+        try {
+            const { data } = await axios.get('/student')
+            this.setState({ students: data })
+            console.log('Our state in the main component:', this.state)
+        }
+        catch (err) {
+            console.log(err)
+        }
     }
 
     selectStudent(student) {
         return this.setState({
-            selectedStudent : student
+            selectedStudent: student
         })
     }
 
-    render(){
+    async addStudent(student) {
+        const { data } = await axios.post('/student', student)
+        this.setState({
+            students: [...this.state.students, data],
+            showForm: false
+        })
+    }
+
+    handleClick(event) {
+        return this.setState({
+            showForm: !this.state.showForm
+        })
+    }
+
+    render() {
         return (
             <div>
                 <h1>Students</h1>
@@ -48,7 +70,10 @@ export default class Main extends Component {
                 {
                     this.state.selectedStudent.id ? <SingleStudent student={this.state.selectedStudent} /> : null
                 }
-               
+                <button onClick={this.handleClick}>Add Student</button>
+                {
+                    this.state.showForm ? <NewStudentForm addStudent={this.addStudent} /> : null
+                }
             </div>
         )
     }
